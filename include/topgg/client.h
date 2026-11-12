@@ -701,7 +701,8 @@ class oauth2_url {
    * @param callback The API call's callback function.
    * @since 2.0.0
    */
-  void exchange(const std::string& code, const callback<oauth2_session>& callback);
+  void exchange(const std::string& code,
+                const callback<oauth2_session>& callback);
 
   friend class oauth2;
 };

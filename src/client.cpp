@@ -441,7 +441,9 @@ void topgg::oauth2_client::revoke_token(const topgg::empty_callback& callback,
   }
 }
 
-void topgg::oauth2_url::exchange(const std::string& code, const topgg::callback<topgg::oauth2_session>& callback) {
+void topgg::oauth2_url::exchange(
+    const std::string& code,
+    const topgg::callback<topgg::oauth2_session>& callback) {
   std::string body{"grant_type=authorization_code&client_id="};
 
   body += m_oauth2->m_client_id +
@@ -654,69 +656,83 @@ static const char g_hex_digits[] = "0123456789abcdef";
 bool topgg::webhooks::verifier::verify(const std::string& secret,
                                        const std::string& signature,
                                        const std::string& body) {
-  const auto signature_comma_position{signature.find(',')};
+  try {
+    const auto signature_comma_position{signature.find(',')};
 
-  if (signature_comma_position == std::string::npos) {
-    return false;
-  }
-
-  const auto signature_timestamp_pair{
-      signature.substr(0, signature_comma_position)};
-  const auto signature_timestamp_equal_position{
-      signature_timestamp_pair.find('=')};
-
-  if (signature_timestamp_equal_position == std::string::npos) {
-    return false;
-  }
-
-  const auto hmac_update_string{
-      signature_timestamp_pair.substr(signature_timestamp_equal_position + 1,
-                                      signature_timestamp_pair.length()) +
-      '.' + body};
-
-  const auto signature_signature_pair{
-      signature.substr(signature_comma_position + 1, signature.length())};
-  const auto signature_signature_equal_position{
-      signature_signature_pair.find('=')};
-
-  if (signature_signature_equal_position == std::string::npos) {
-    return false;
-  }
-
-  const auto signature_signature{
-      signature_signature_pair.substr(signature_signature_equal_position + 1,
-                                      signature_signature_pair.length())};
-
-  size_t hmac_length{};
-  std::vector<uint8_t> hmac(hmac_length);
-
-  {
-    std::lock_guard guard_{m_mutex};
-
-    if (EVP_MAC_init(m_mac_context,
-                     reinterpret_cast<const unsigned char*>(secret.c_str()),
-                     secret.length(), m_params) != 1 ||
-        EVP_MAC_update(
-            m_mac_context,
-            reinterpret_cast<const unsigned char*>(hmac_update_string.c_str()),
-            hmac_update_string.length()) != 1 ||
-        EVP_MAC_final(m_mac_context, nullptr, &hmac_length, 0) != 1 ||
-        (hmac_length * 2) != signature_signature.length() ||
-        EVP_MAC_final(m_mac_context, hmac.data(), &hmac_length, hmac_length) !=
-            1) {
+    if (signature_comma_position == std::string::npos) {
       return false;
     }
+
+    const auto signature_timestamp_pair{
+        signature.substr(0, signature_comma_position)};
+    const auto signature_timestamp_equal_position{
+        signature_timestamp_pair.find('=')};
+
+    if (signature_timestamp_equal_position == std::string::npos) {
+      return false;
+    }
+
+    const auto signature_timestamp_text{
+        signature_timestamp_pair.substr(signature_timestamp_equal_position + 1,
+                                        signature_timestamp_pair.length())};
+    size_t signature_timestamp_pos{};
+    int64_t signature_timestamp{
+        std::stoll(signature_timestamp_text, &signature_timestamp_pos)};
+
+    if (signature_timestamp_pos != signature_timestamp_text.size() ||
+        (abs(static_cast<int64_t>(time(nullptr)) - signature_timestamp) >
+         300)) {
+      return false;
+    }
+
+    const auto hmac_update_string{signature_timestamp_text + '.' + body};
+
+    const auto signature_signature_pair{
+        signature.substr(signature_comma_position + 1, signature.length())};
+    const auto signature_signature_equal_position{
+        signature_signature_pair.find('=')};
+
+    if (signature_signature_equal_position == std::string::npos) {
+      return false;
+    }
+
+    const auto signature_signature{
+        signature_signature_pair.substr(signature_signature_equal_position + 1,
+                                        signature_signature_pair.length())};
+
+    size_t hmac_length{};
+    std::vector<uint8_t> hmac(hmac_length);
+
+    {
+      std::lock_guard guard_{m_mutex};
+
+      if (EVP_MAC_init(m_mac_context,
+                       reinterpret_cast<const unsigned char*>(secret.c_str()),
+                       secret.length(), m_params) != 1 ||
+          EVP_MAC_update(m_mac_context,
+                         reinterpret_cast<const unsigned char*>(
+                             hmac_update_string.c_str()),
+                         hmac_update_string.length()) != 1 ||
+          EVP_MAC_final(m_mac_context, nullptr, &hmac_length, 0) != 1 ||
+          (hmac_length * 2) != signature_signature.length() ||
+          EVP_MAC_final(m_mac_context, hmac.data(), &hmac_length,
+                        hmac_length) != 1) {
+        return false;
+      }
+    }
+
+    uint8_t result{};
+    size_t index{};
+
+    for (const auto byte : hmac) {
+      result |= (signature_signature[index++] ^ g_hex_digits[byte >> 4]);
+      result |= (signature_signature[index++] ^ g_hex_digits[byte & 0x0f]);
+    }
+
+    return result == 0;
+  } catch (const std::exception&) {
+    return false;
   }
-
-  uint8_t result{};
-  size_t index{};
-
-  for (const auto byte : hmac) {
-    result |= (signature_signature[index++] ^ g_hex_digits[byte >> 4]);
-    result |= (signature_signature[index++] ^ g_hex_digits[byte & 0x0f]);
-  }
-
-  return result == 0;
 }
 
 topgg::webhooks::verifier::~verifier() {
