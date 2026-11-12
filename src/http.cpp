@@ -581,9 +581,9 @@ void topgg::http_backend::flush_oauth2_requests() {
 
           (*client)->refresh_token();
         },
-        now > client->m_session.token_expires_at
+        now > (client->m_session.token_expires_at - 5000)
             ? 0
-            : ((client->m_session.token_expires_at - now) * 1000),
+            : ((client->m_session.token_expires_at - now) * 1000) - 5000,
         (TOPGG_TOKEN_EXPIRY_INTERVAL * 1000) - 5000);
 
     m_oauth2_mutex.lock();
