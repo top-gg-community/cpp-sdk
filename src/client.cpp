@@ -150,7 +150,7 @@ void topgg::base_client::get_votes(
                   defer);
 }
 
-void topgg::base_client::get_votes(
+void topgg::base_client::get_vote(
     const std::string& id, const std::string& user_id,
     const topgg::user_source& source,
     const topgg::callback<topgg::partial_vote>& callback, const bool defer) {

@@ -323,9 +323,7 @@ class base_client {
                  const bool defer = false);
 
   /**
-   * @brief Fetches the most recent vote status for a specific user. Use this to
-   * check whether a user has voted before granting in-app rewards or unlocking
-   * features.
+   * @brief Fetches the most recent vote for a specific user.
    *
    * @param id The project's Top.gg ID.
    * @param user_id The ID of the user to look up. The expected format depends
@@ -335,10 +333,10 @@ class base_client {
    * @param defer Whether to defer the request later. Defaults to false.
    * @since 2.0.0
    */
-  void get_votes(const std::string& id, const std::string& user_id,
-                 const user_source& source,
-                 const callback<partial_vote>& callback,
-                 const bool defer = false);
+  void get_vote(const std::string& id, const std::string& user_id,
+                const user_source& source,
+                const callback<partial_vote>& callback,
+                const bool defer = false);
 
   /**
    * @brief Fetches the integrations available for a project and whether each
