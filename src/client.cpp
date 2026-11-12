@@ -441,9 +441,7 @@ void topgg::oauth2_client::revoke_token(const topgg::empty_callback& callback,
   }
 }
 
-void topgg::oauth2_url::exchange(
-    const std::string& code, const std::string& state,
-    const topgg::callback<topgg::oauth2_session>& callback) {
+void topgg::oauth2_url::exchange(const std::string& code, const topgg::callback<topgg::oauth2_session>& callback) {
   std::string body{"grant_type=authorization_code&client_id="};
 
   body += m_oauth2->m_client_id +

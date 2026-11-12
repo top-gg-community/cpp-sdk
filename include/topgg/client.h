@@ -700,12 +700,10 @@ class oauth2_url {
    * @brief Exchanges an authorization code for an oauth2 session.
    *
    * @param code The request's code query parameter.
-   * @param state The request's state query parameter.
    * @param callback The API call's callback function.
    * @since 2.0.0
    */
-  void exchange(const std::string& code, const std::string& state,
-                const callback<oauth2_session>& callback);
+  void exchange(const std::string& code, const callback<oauth2_session>& callback);
 
   friend class oauth2;
 };

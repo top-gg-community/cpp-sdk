@@ -293,7 +293,7 @@ int main() {
   server.Get("/topgg/oauth2", [&server, &oauth2, oauth2_url = std::shared_ptr{oauth2_url}](const httplib::Request& request, httplib::Response& response) {
     if (request.has_param("code") && request.has_param("state")) {
       try {
-        oauth2_url->exchange(request.get_param_value("code"), request.get_param_value("state"), [&server, &oauth2](const topgg::result<topgg::oauth2_session>& result) {
+        oauth2_url->exchange(request.get_param_value("code"), [&server, &oauth2](const topgg::result<topgg::oauth2_session>& result) {
           try {
             auto& session{result.get()};
             auto dbl{oauth2.new_client(session)};
