@@ -16,12 +16,12 @@ BEGIN
     BLOCK "040904B0"
     BEGIN
       VALUE "CompanyName", "Top.gg"
-      VALUE "FileDescription", "The official C++ wrapper for the Top.gg API."
+      VALUE "FileDescription", "The community-maintained C++17 SDK for Top.gg."
       VALUE "FileVersion", "2.0.0"
       VALUE "ProductVersion", "2.0.0"
       VALUE "ProductName", "Top.gg C++ SDK"
       VALUE "InternalName", "Top.gg C++ SDK"
-      VALUE "LegalCopyright", "Copyright (c) 2024 Top.gg & null8626"
+      VALUE "LegalCopyright", "Copyright (c) 2024-2026 Top.gg & null8626"
       VALUE "OriginalFilename", "topgg.dll"
     END
   END

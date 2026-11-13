@@ -1,10 +1,5 @@
-**/*.deb
-**/*.rpm
-.idea
-cmake-build-debug/
-
-.vscode/
-include/dpp/
 build/
-deps/
+docs/*.bak
 docs/html/
+include/httplib.h
+include/nlohmann/

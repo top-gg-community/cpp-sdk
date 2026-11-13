@@ -1,252 +1,247 @@
 #include <topgg/topgg.h>
 
-using topgg::account;
-using topgg::bot;
-using topgg::stats;
-using topgg::user;
-using topgg::user_socials;
+topgg::partial_project::partial_project(const nlohmann::json& j) {
+  id = j["id"].template get<std::string>();
+  platform_id = j["platform_id"].template get<std::string>();
+  name = j["name"].template get<std::string>();
 
-#ifdef _WIN32
-#include <sstream>
-#include <iomanip>
-
-static void strptime(const char* s, const char* f, tm* t) {
-  std::istringstream input{s};
-  input.imbue(std::locale{setlocale(LC_ALL, nullptr)});
-  input >> std::get_time(t, f);
+  platform =
+      topgg::_from_platform_string(j["platform"].template get<std::string>());
+  type =
+      topgg::_from_project_type_string(j["type"].template get<std::string>());
 }
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4101)
-#endif
-#endif
+topgg::project::project(const nlohmann::json& j) {
+  id = j["id"].template get<std::string>();
+  name = j["name"].template get<std::string>();
+  platform =
+      topgg::_from_platform_string(j["platform"].template get<std::string>());
+  type =
+      topgg::_from_project_type_string(j["type"].template get<std::string>());
+  headline = j["headline"].template get<std::string>();
 
-#define SERIALIZE_PRIVATE_OPTIONAL(j, name) \
-  if (m_##name.has_value()) {               \
-    j[#name] = m_##name.value();            \
+  for (const auto& tag : j["tags"]) {
+    tags.push_back(tag.template get<std::string>());
   }
 
-#define DESERIALIZE(j, name, type) \
-  name = j[#name].template get<type>()
-
-#define DESERIALIZE_ALIAS(j, name, prop, type) \
-  prop = j[#name].template get<type>()
-
-#define IGNORE_EXCEPTION(scope) \
-  try scope catch (TOPGG_UNUSED const std::exception&) {}
-
-#define DESERIALIZE_VECTOR(j, name, type)                  \
-  IGNORE_EXCEPTION({                                       \
-    name = j[#name].template get<std::vector<type>>();     \
-  })
-
-#define DESERIALIZE_VECTOR_ALIAS(j, name, prop, type)      \
-  IGNORE_EXCEPTION({                                       \
-    prop = j[#name].template get<std::vector<type>>();     \
-  })
-
-#define DESERIALIZE_OPTIONAL(j, name, type)   \
-  IGNORE_EXCEPTION({                          \
-    name = j[#name].template get<type>();     \
-  })
-
-#define DESERIALIZE_PRIVATE_OPTIONAL(j, name, type)   \
-  IGNORE_EXCEPTION({                                  \
-    m_##name = j[#name].template get<type>();         \
-  })
-
-#define DESERIALIZE_OPTIONAL_ALIAS(j, name, prop) \
-  IGNORE_EXCEPTION({                              \
-    prop = j[#name].template get<type>();         \
-  })
-
-#define DESERIALIZE_OPTIONAL_STRING(j, name)                      \
-  IGNORE_EXCEPTION({                                              \
-    const auto value = j[#name].template get<std::string>(); \
-                                                                  \
-    if (value.size() > 0) {                                       \
-      name = std::optional{value};                                \
-    }                                                             \
-  })
-
-#define DESERIALIZE_OPTIONAL_STRING_ALIAS(j, name, prop)          \
-  IGNORE_EXCEPTION({                                              \
-    const auto value = j[#name].template get<std::string>(); \
-                                                                  \
-    if (value.size() > 0) {                                       \
-      prop = std::optional{value};                                \
-    }                                                             \
-  })
-
-account::account(const dpp::json& j) {
-  id = dpp::snowflake{j["id"].template get<std::string>()};
-
-  DESERIALIZE(j, username, std::string);
-
-  try {
-    const auto hash = j["avatar"].template get<std::string>();
-    const char* ext = hash.rfind("a_", 0) == 0 ? "gif" : "png";
-
-    avatar = "https://cdn.discordapp.com/avatars/" + std::to_string(id) + "/" + hash + "." + ext + "?size=1024";
-  } catch (TOPGG_UNUSED const std::exception&) {
-    avatar = "https://cdn.discordapp.com/embed/avatars/" + std::to_string((id >> 22) % 5) + ".png";
-  }
-
-  created_at = static_cast<time_t>(((id >> 22) / 1000) + 1420070400);
+  current_votes = j["votes"].template get<uint64_t>();
+  total_votes = j["votes_total"].template get<uint64_t>();
+  review_score = j["review_score"].template get<float>();
+  review_count = j["review_count"].template get<uint64_t>();
 }
 
-bot::bot(const dpp::json& j)
-  : account(j), url("https://top.gg/bot/") {
-  DESERIALIZE(j, discriminator, std::string);
-  DESERIALIZE(j, prefix, std::string);
-  DESERIALIZE_ALIAS(j, shortdesc, short_description, std::string);
-  DESERIALIZE_OPTIONAL_STRING_ALIAS(j, longdesc, long_description);
-  DESERIALIZE_VECTOR(j, tags, std::string);
-  DESERIALIZE_OPTIONAL_STRING(j, website);
-  DESERIALIZE_OPTIONAL_STRING(j, github);
+void topgg::locale_map::enforce_constraints(const uint16_t minimum,
+                                            const uint16_t maximum) const {
+  for (const auto& item : m_json.items()) {
+    const auto text{item.value().template get<std::string_view>()};
 
-  IGNORE_EXCEPTION({
-    const auto j_owners = j["owners"].template get<std::vector<std::string>>();
-
-    owners.reserve(j_owners.size());
-
-    for (const auto& owner: j_owners) {
-      owners.push_back(dpp::snowflake{owner});
+    if (text.length() < minimum) {
+      throw topgg::exception{
+          "A locale_map text length is below the minimum threshold"};
+    } else if (text.length() > maximum) {
+      throw topgg::exception{
+          "A locale_map text length is above the maximum threshold"};
     }
-  });
-
-  DESERIALIZE_VECTOR(j, guilds, size_t);
-  DESERIALIZE_OPTIONAL_STRING_ALIAS(j, bannerUrl, banner);
-
-  const auto j_approved_at = j["date"].template get<std::string>();
-  tm approved_at_tm;
-
-  strptime(j_approved_at.data(), "%Y-%m-%dT%H:%M:%S", &approved_at_tm);
-  approved_at = mktime(&approved_at_tm);
-
-  DESERIALIZE_ALIAS(j, certifiedBot, is_certified, bool);
-  DESERIALIZE_VECTOR(j, shards, size_t);
-  DESERIALIZE_ALIAS(j, points, votes, size_t);
-  DESERIALIZE_ALIAS(j, monthlyPoints, monthly_votes, size_t);
-
-  try {
-    DESERIALIZE(j, invite, std::string);
-  } catch (TOPGG_UNUSED const std::exception&) {
-    invite = "https://discord.com/oauth2/authorize?scope=bot&client_id=" + std::to_string(id);
-  }
-
-  IGNORE_EXCEPTION({
-    const auto j_support = j["support"].template get<std::string>();
-
-    if (j_support.size() > 0) {
-      support = std::optional{"https://discord.com/invite/" + j_support};
-    }
-  });
-
-  try {
-    DESERIALIZE(j, shard_count, size_t);
-  } catch (TOPGG_UNUSED const std::exception&) {
-    shard_count = shards.size();
-  }
-
-  try {
-    url.append(j["vanity"].template get<std::string>());
-  } catch (TOPGG_UNUSED const std::exception&) {
-    url.append(std::to_string(id));
   }
 }
 
-stats::stats(const dpp::json& j) {
-  DESERIALIZE_PRIVATE_OPTIONAL(j, shard_count, size_t);
-  DESERIALIZE_PRIVATE_OPTIONAL(j, server_count, size_t);
-  DESERIALIZE_PRIVATE_OPTIONAL(j, shards, std::vector<size_t>);
-  DESERIALIZE_PRIVATE_OPTIONAL(j, shard_id, size_t);
-}
+void topgg::locale_map::set(const topgg::locale& locale,
+                            const std::string& text) {
+  std::string key{};
 
-stats::stats(dpp::cluster& bot) {
-  std::vector<size_t> shards_server_count{};
-  size_t servers{};
-  
-  shards_server_count.reserve(bot.numshards);
-  
-  for (auto& s: bot.get_shards()) {
-    const auto server_count = s.second->get_guild_count();
-    
-    servers += server_count;
-    shards_server_count.push_back(server_count);
+  switch (locale) {
+    case topgg::locale::l_english:
+      key = "en";
+      break;
+    case topgg::locale::l_german:
+      key = "de";
+      break;
+    case topgg::locale::l_french:
+      key = "fr";
+      break;
+    case topgg::locale::l_portuguese:
+      key = "pt";
+      break;
+    case topgg::locale::l_turkish:
+      key = "tr";
+      break;
+    case topgg::locale::l_hindi:
+      key = "hi";
+      break;
+    case topgg::locale::l_japanese:
+      key = "ja";
+      break;
+    case topgg::locale::l_arabic:
+      key = "ar";
+      break;
+    case topgg::locale::l_dutch:
+      key = "nl";
+      break;
+    case topgg::locale::l_korean:
+      key = "ko";
+      break;
+    case topgg::locale::l_italian:
+      key = "it";
+      break;
+    case topgg::locale::l_spanish:
+      key = "es";
+      break;
+    case topgg::locale::l_russian:
+      key = "ru";
+      break;
+    case topgg::locale::l_ukrainian:
+      key = "uk";
+      break;
+    case topgg::locale::l_vietnamese:
+      key = "vi";
+      break;
+    case topgg::locale::l_chinese_simplified:
+      key = "zh";
+      break;
   }
-  
-  m_server_count = std::optional{servers};
-  m_shards = std::optional{shards_server_count};
-  m_shard_id = std::optional{0};
-  m_shard_count = std::optional{bot.numshards};
+
+  m_json[key] = text;
 }
 
-stats::stats(const std::vector<size_t>& shards, const size_t shard_index)
-  : m_shards(std::optional{shards}), m_server_count(std::optional{std::reduce(shards.begin(), shards.end())}) {
-  if (shard_index >= shards.size()) {
-    throw std::out_of_range{"Shard index out of bounds from the given shards array."};
-  }
+nlohmann::json topgg::discord_bot_metrics::to_json() const {
+  nlohmann::json json{};
 
-  m_shard_id = std::optional{shard_index};
-  m_shard_count = std::optional{shards.size()};
-}
-
-std::string stats::to_json() const {
-  dpp::json j;
-
-  SERIALIZE_PRIVATE_OPTIONAL(j, shard_count);
-  SERIALIZE_PRIVATE_OPTIONAL(j, server_count);
-  SERIALIZE_PRIVATE_OPTIONAL(j, shards);
-  SERIALIZE_PRIVATE_OPTIONAL(j, shard_id);
-
-  return j.dump();
-}
-
-std::vector<size_t> stats::shards() const noexcept {
-  return m_shards.value_or(std::vector<size_t>{});
-}
-
-size_t stats::shard_count() const noexcept {
-  return m_shard_count.value_or(shards().size());
-}
-
-std::optional<size_t> stats::server_count() const noexcept {
   if (m_server_count.has_value()) {
-    return m_server_count;
+    json["server_count"] = m_server_count.value();
+  }
+
+  if (m_shard_count.has_value()) {
+    json["shard_count"] = m_shard_count.value();
+  }
+
+  return json;
+}
+
+nlohmann::json topgg::discord_server_metrics::to_json() const {
+  nlohmann::json json{};
+
+  if (m_total_member_count.has_value()) {
+    json["member_count"] = m_total_member_count.value();
+  }
+
+  if (m_online_member_count.has_value()) {
+    json["online_count"] = m_online_member_count.value();
+  }
+
+  return json;
+}
+
+nlohmann::json topgg::roblox_metrics::to_json() const {
+  nlohmann::json json{};
+
+  json["player_count"] = m_player_count;
+
+  return json;
+}
+
+topgg::partial_vote::partial_vote(const nlohmann::json& j) {
+  weight = j["weight"].template get<uint16_t>();
+  created_at =
+      topgg::_from_time_string(j["created_at"].template get<std::string>());
+  expires_at =
+      topgg::_from_time_string(j["expires_at"].template get<std::string>());
+}
+
+topgg::vote::vote(const nlohmann::json& j) : topgg::partial_vote(j) {
+  user_id = j["user_id"].template get<std::string>();
+  platform_id = j["platform_id"].template get<std::string>();
+}
+
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+topgg::integration::integration(const nlohmann::json& j) {
+  id = j["id"].template get<std::string>();
+  name = j["name"].template get<std::string>();
+  description = j["description"].template get<std::string>();
+  icon_url = j["icon_url"].template get<std::string>();
+  connected = j["connected"].template get<bool>();
+}
+
+topgg::base_webhook::base_webhook(const nlohmann::json& j) {
+  label = j["label"].template get<std::string>();
+  url = j["url"].template get<std::string>();
+}
+
+topgg::webhook::webhook(const nlohmann::json& j) : topgg::base_webhook(j) {
+  id = j["id"].template get<std::string>();
+}
+
+topgg::user::user(const nlohmann::json& j) {
+  id = j["id"].template get<std::string>();
+  username = j["username"].template get<std::string>();
+
+  if (j.contains("avatar")) {
+    avatar = j["avatar"].template get<std::optional<std::string>>();
+  }
+
+  for (const auto& connection : j["connections"]) {
+    connections.push_back(
+        {topgg::_from_platform_string(
+             connection["platform"].template get<std::string>()),
+         connection["id"].template get<std::string>()});
+  }
+}
+
+topgg::user_project::user_project(const nlohmann::json& j)
+    : topgg::partial_project(j) {
+  headline = j["headline"].template get<std::string>();
+
+  const auto review_status_{j["review_status"].template get<std::string>()};
+
+  if (review_status_ == "draft") {
+    review_status = topgg::review_status::rs_draft;
+  } else if (review_status_ == "in_review") {
+    review_status = topgg::review_status::rs_in_review;
   } else {
-    IGNORE_EXCEPTION({
-      const auto& shards = m_shards.value();
-
-      if (shards.size() > 0) {
-        return std::optional{std::reduce(shards.begin(), shards.end())};
-      }
-    });
-
-    return std::nullopt;
+    review_status = topgg::review_status::rs_approved;
   }
 }
+#endif
 
-user_socials::user_socials(const dpp::json& j) {
-  DESERIALIZE_OPTIONAL_STRING(j, github);
-  DESERIALIZE_OPTIONAL_STRING(j, instagram);
-  DESERIALIZE_OPTIONAL_STRING(j, reddit);
-  DESERIALIZE_OPTIONAL_STRING(j, twitter);
-  DESERIALIZE_OPTIONAL_STRING(j, youtube);
+#ifdef TOPGG_WEBHOOKS
+topgg::webhooks::project::project(const nlohmann::json& j) {
+  id = j["id"].template get<std::string>();
+  platform_id = j["platform_id"].template get<std::string>();
+  platform =
+      topgg::_from_platform_string(j["platform"].template get<std::string>());
+  type =
+      topgg::_from_project_type_string(j["type"].template get<std::string>());
 }
 
-user::user(const dpp::json& j)
-  : account(j) {
-  DESERIALIZE_OPTIONAL_STRING(j, bio);
-  DESERIALIZE_OPTIONAL_STRING(j, banner);
-
-  if (j.contains("socials")) {
-    socials = std::optional{user_socials{j["socials"].template get<dpp::json>()}};
-  }
-
-  DESERIALIZE_ALIAS(j, supporter, is_supporter, bool);
-  DESERIALIZE_ALIAS(j, certifiedDev, is_certified_dev, bool);
-  DESERIALIZE_ALIAS(j, mod, is_moderator, bool);
-  DESERIALIZE_ALIAS(j, webMod, is_web_moderator, bool);
-  DESERIALIZE_ALIAS(j, admin, is_admin, bool);
+topgg::webhooks::user::user(const nlohmann::json& j) {
+  id = j["id"].template get<std::string>();
+  platform_id = j["platform_id"].template get<std::string>();
+  name = j["name"].template get<std::string>();
+  avatar = j["avatar_url"].template get<std::string>();
 }
+
+topgg::webhooks::vote_create::vote_create(const nlohmann::json& j)
+    : project(j["project"]), user(j["user"]) {
+  id = j["id"].template get<std::string>();
+  weight = j["weight"].template get<uint16_t>();
+  created_at = topgg::_from_time_string(
+      j["created_at"].template get<std::string>().substr(0, 19));
+  expires_at = topgg::_from_time_string(
+      j["expires_at"].template get<std::string>().substr(0, 19));
+  query =
+      j["query"].template get<std::unordered_map<std::string, std::string>>();
+}
+
+topgg::webhooks::test::test(const nlohmann::json& j)
+    : project(j["project"]), user(j["user"]) {}
+
+topgg::webhooks::integration_create::integration_create(const nlohmann::json& j)
+    : project(j["project"]), user(j["user"]) {
+  connection_id = j["connection_id"].template get<std::string>();
+  webhook_secret = j["webhook_secret"].template get<std::string>();
+}
+
+topgg::webhooks::integration_delete::integration_delete(
+    const nlohmann::json& j) {
+  connection_id = j["connection_id"].template get<std::string>();
+}
+#endif

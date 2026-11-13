@@ -1,58 +1,31 @@
-html {
-  --font-family-monospace: 'Roboto Mono';
-  --separator-color: rgba(0, 0, 0, 0);
+:root {
+  --font-family: 'Manrope';
 }
 
-#projectname a,
-div.header .title,
-#projectname,
-h1,
-h2.groupheader {
-  font-weight: 900;
+button:focus, input:focus, a:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-a:hover {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-#top {
-  border-bottom: none;
-}
-
-div.contents {
-  margin: 0px auto var(--spacing-medium) auto;
-  padding-bottom: var(--spacing-large);
-}
-
-@media screen and (min-width: 768px) {
-  html,
-  body {
-    position: relative;
-    height: 100%;
-  }
-
-  #apis {
-    position: relative;
-    height: calc(100% - var(--top-height) + var(--spacing-large));
-  }
-
-  #top {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0px;
-    height: 100%;
-  }
-  
-  #doc-content {
-    position: relative;
-    top: calc(var(--top-height) - 100%);
-    padding-top: 0px;
-    height: 100% !important;
-  }
-}
-
-#nav-path,
-#nav-sync {
+#nav-sync, #nav-path {
   display: none;
+}
+
+#doc-content {
+  padding-top: 0;
+}
+
+@media (min-width: 768px) {
+  #top {
+    padding-bottom: 1em;
+  }
+
+  #nav-tree {
+    padding-top: 1em;
+    height: calc(100vh - var(--top-height) - 1em) !important;
+  }
+
+  #doc-content {
+    height: calc(100vh - 1em) !important;
+  }
 }

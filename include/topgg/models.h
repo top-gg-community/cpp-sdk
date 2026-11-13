@@ -1,455 +1,971 @@
-/**
- * @module topgg
- * @file models.h
- * @brief The official C++ wrapper for the Top.gg API.
- * @authors Top.gg, null8626
- * @copyright Copyright (c) 2024 Top.gg & null8626
- * @date 2024-07-12
- * @version 2.0.0
- */
-
 #pragma once
 
-#include <topgg/topgg.h>
-
-#include <string>
-#include <optional>
-#include <string>
-#include <vector>
-
-#if !defined(_WIN32) && !defined(_XOPEN_SOURCE)
-#define _XOPEN_SOURCE
-#endif
-
 #include <ctime>
+#include <nlohmann/json.hpp>
+#include <string>
+#include <type_traits>
 
-#ifdef _XOPEN_SOURCE
-#undef _XOPEN_SOURCE
-#endif
-
+/**
+ * @brief The Top.gg namespace.
+ *
+ * @since 2.0.0
+ */
 namespace topgg {
+template <class T>
+class paginated_result;
+
+/**
+ * @brief A project's platform.
+ *
+ * @since 2.0.0
+ */
+enum platform {
   /**
-   * @brief Base class of the account data stored in the Top.gg API.
+   * @brief Discord.
    *
-   * @see topgg::bot
-   * @see topgg::user
-   * @see topgg::voter
    * @since 2.0.0
    */
-  class TOPGG_EXPORT account {
-  protected:
-    account(const dpp::json& j);
-
-  public:
-    account() = delete;
-
-    /**
-     * @brief The account's Discord ID.
-     *
-     * @since 2.0.0
-     */
-    dpp::snowflake id;
-
-    /**
-     * @brief The account's entire Discord avatar URL.
-     *
-     * @note This avatar URL can be animated if possible.
-     * @since 2.0.0
-     */
-    std::string avatar;
-
-    /**
-     * @brief The account's username.
-     *
-     * @since 2.0.0
-     */
-    std::string username;
-
-    /**
-     * @brief The unix timestamp of when this account was created.
-     *
-     * @since 2.0.0
-     */
-    time_t created_at;
-  };
-
-  class client;
+  p_discord,
 
   /**
-   * @brief Represents voters of a Discord bot.
+   * @brief Roblox.
    *
-   * @see topgg::client::get_voters
-   * @see topgg::client::start_autoposter
-   * @see topgg::account
    * @since 2.0.0
    */
-  class TOPGG_EXPORT voter: public account {
-    inline voter(const dpp::json& j)
-      : account(j) {}
+  p_roblox,
+};
 
-  public:
-    voter() = delete;
-
-    friend class client;
-  };
+/**
+ * @brief A project's type.
+ *
+ * @since 2.0.0
+ */
+enum project_type {
+  /**
+   * @brief A bot.
+   *
+   * @since 2.0.0
+   */
+  pt_bot,
 
   /**
-   * @brief Represents a Discord bot listed on Top.gg.
+   * @brief A server.
    *
-   * @see topgg::client::get_bot
-   * @see topgg::account
    * @since 2.0.0
    */
-  class TOPGG_EXPORT bot: public account {
-    bot(const dpp::json& j);
-
-  public:
-    bot() = delete;
-
-    /**
-     * @brief The Discord bot's discriminator.
-     *
-     * @since 2.0.0
-     */
-    std::string discriminator;
-
-    /**
-     * @brief The Discord bot's command prefix.
-     *
-     * @since 2.0.0
-     */
-    std::string prefix;
-
-    /**
-     * @brief The Discord bot's short description.
-     *
-     * @since 2.0.0
-     */
-    std::string short_description;
-
-    /**
-     * @brief The Discord bot's long description, if available.
-     *
-     * @note This long description can contain Markdown and/or HTML.
-     * @since 2.0.0
-     */
-    std::optional<std::string> long_description;
-
-    /**
-     * @brief A list of the Discord bot's tags.
-     *
-     * @since 2.0.0
-     */
-    std::vector<std::string> tags;
-
-    /**
-     * @brief A link to the Discord bot's website, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> website;
-
-    /**
-     * @brief A link to the Discord bot's GitHub repository, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> github;
-
-    /**
-     * @brief A list of the Discord bot's owners, represented in Discord user IDs.
-     *
-     * @since 2.0.0
-     */
-    std::vector<dpp::snowflake> owners;
-
-    /**
-     * @brief A list of IDs of the guilds featured on this Discord bot’s page.
-     *
-     * @since 2.0.0
-     */
-    std::vector<size_t> guilds;
-
-    /**
-     * @brief The Discord bot's page banner URL, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> banner;
-
-    /**
-     * @brief The unix timestamp of when this Discord bot was approved on Top.gg by a Bot Reviewer.
-     *
-     * @since 2.0.0
-     */
-    time_t approved_at;
-
-    /**
-     * @brief Whether this Discord bot is Top.gg certified or not.
-     *
-     * @since 2.0.0
-     */
-    bool is_certified;
-
-    /**
-     * @brief A list of this Discord bot’s shards.
-     *
-     * @since 2.0.0
-     */
-    std::vector<size_t> shards;
-
-    /**
-     * @brief The amount of upvotes this Discord bot has.
-     *
-     * @since 2.0.0
-     */
-    size_t votes;
-
-    /**
-     * @brief The amount of upvotes this Discord bot has this month.
-     *
-     * @since 2.0.0
-     */
-    size_t monthly_votes;
-
-    /**
-     * @brief The Discord bot's support server invite URL, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> support;
-
-    /**
-     * @brief The amount of shards this Discord bot has according to posted stats.
-     *
-     * @since 2.0.0
-     */
-    size_t shard_count;
-
-    /**
-     * @brief The invite URL of this Discord bot.
-     *
-     * @since 2.0.0
-     */
-    std::string invite;
-
-    /**
-     * @brief The URL of this Discord bot’s Top.gg page.
-     *
-     * @since 2.0.0
-     */
-    std::string url;
-
-    friend class client;
-  };
+  pt_server,
 
   /**
-   * @brief Represents a Discord bot’s statistics.
+   * @brief A game.
    *
-   * @see topgg::voter
-   * @see topgg::client::get_stats
-   * @see topgg::client::post_stats
-   * @see topgg::client::start_autoposter
    * @since 2.0.0
    */
-  class TOPGG_EXPORT stats {
-    stats(const dpp::json& j);
+  pt_game,
+};
 
-    std::optional<size_t> m_shard_count;
-    std::optional<std::vector<size_t>> m_shards;
-    std::optional<size_t> m_shard_id;
-    std::optional<size_t> m_server_count;
+/**
+ * @brief A partial project.
+ *
+ * @since 2.0.0
+ */
+class partial_project {
+ protected:
+  partial_project(const nlohmann::json& j);
 
-    std::string to_json() const;
-
-  public:
-    stats() = delete;
-
-    /**
-     * @brief Creates a stats object based on existing data from your D++ cluster instance.
-     *
-     * @param bot The D++ cluster instance.
-     * @since 2.0.0
-     */
-    stats(dpp::cluster& bot);
-
-    /**
-     * @brief Creates a stats object based on the bot's server and shard count.
-     *
-     * @param server_count The amount of servers this Discord bot has.
-     * @param shard_count The amount of shards this Discord bot has. Defaults to one.
-     * @since 2.0.0
-     */
-    inline stats(const size_t server_count, const size_t shard_count = 1)
-      : m_shard_count(std::optional{shard_count}), m_server_count(std::optional{server_count}) {}
-
-    /**
-     * @brief Creates a stats object based on the bot's shard data.
-     *
-     * @param shards An array of this bot's server count for each shard.
-     * @param shard_index The array index of the shard posting this data, defaults to zero.
-     * @throw std::out_of_range If the shard_index argument is out of bounds from the shards argument.
-     * @since 2.0.0
-     */
-    stats(const std::vector<size_t>& shards, const size_t shard_index = 0);
-
-    /**
-     * @brief Returns this stats object's server count for each shard.
-     * @return std::vector<size_t> This stats object's server count for each shard.
-     * @since 2.0.0
-     */
-    std::vector<size_t> shards() const noexcept;
-
-    /**
-     * @brief Returns this stats object's shard count.
-     * @return size_t This stats object's shard count.
-     * @since 2.0.0
-     */
-    size_t shard_count() const noexcept;
-
-    /**
-     * @brief Returns this stats object's server count, if available.
-     * @return std::optional<size_t> This stats object's server count, if available.
-     * @since 2.0.0
-     */
-    std::optional<size_t> server_count() const noexcept;
-
-    /**
-     * @brief Sets this stats object's server count.
-     *
-     * @param new_server_count The new server count.
-     * @since 2.0.0
-     */
-    inline void set_server_count(const size_t new_server_count) noexcept {
-      m_server_count = std::optional{new_server_count};
-    }
-
-    friend class client;
-  };
-
-  class user;
+ public:
+  partial_project() = delete;
 
   /**
-   * @brief Represents a user's social links, if available.
+   * @brief The project's Top.gg ID.
    *
-   * @see topgg::user
    * @since 2.0.0
    */
-  class TOPGG_EXPORT user_socials {
-    user_socials(const dpp::json& j);
-
-  public:
-    user_socials() = delete;
-
-    /**
-     * @brief A URL of this user’s GitHub account, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> github;
-
-    /**
-     * @brief A URL of this user’s Instagram account, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> instagram;
-
-    /**
-     * @brief A URL of this user’s Reddit account, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> reddit;
-
-    /**
-     * @brief A URL of this user’s Twitter/X account, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> twitter;
-
-    /**
-     * @brief A URL of this user’s YouTube channel, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> youtube;
-
-    friend class user;
-  };
+  std::string id{};
 
   /**
-   * @brief Represents a user logged into Top.gg.
+   * @brief The project's platform ID.
    *
-   * @see topgg::user_socials
-   * @see topgg::client::get_user
-   * @see topgg::voter
-   * @see topgg::account
    * @since 2.0.0
    */
-  class TOPGG_EXPORT user: public account {
-    user(const dpp::json& j);
+  std::string platform_id{};
 
-  public:
-    user() = delete;
+  /**
+   * @brief The project's name in its platform.
+   *
+   * @since 2.0.0
+   */
+  std::string name{};
 
-    /**
-     * @brief The user's bio, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> bio;
+  /**
+   * @brief The project's platform.
+   *
+   * @since 2.0.0
+   */
+  topgg::platform platform{};
 
-    /**
-     * @brief The URL of this user’s profile banner image, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<std::string> banner;
+  /**
+   * @brief The project's type.
+   *
+   * @since 2.0.0
+   */
+  project_type type{};
 
-    /**
-     * @brief This user's social links, if available.
-     *
-     * @since 2.0.0
-     */
-    std::optional<user_socials> socials;
+  friend class base_client;
+  friend class paginated_result<partial_project>;
+};
 
-    /**
-     * @brief Whether this user is a Top.gg supporter or not.
-     *
-     * @since 2.0.0
-     */
-    bool is_supporter;
+/**
+ * @brief A project.
+ *
+ * @since 2.0.0
+ */
+class project {
+  project(const nlohmann::json& j);
 
-    /**
-     * @brief Whether this user is a Top.gg certified developer or not.
-     *
-     * @since 2.0.0
-     */
-    bool is_certified_dev;
+ public:
+  project() = delete;
 
-    /**
-     * @brief Whether this user is a Top.gg moderator or not.
-     *
-     * @since 2.0.0
-     */
-    bool is_moderator;
+  /**
+   * @brief The project's Top.gg ID.
+   *
+   * @since 2.0.0
+   */
+  std::string id{};
 
-    /**
-     * @brief Whether this user is a Top.gg website moderator or not.
-     *
-     * @since 2.0.0
-     */
-    bool is_web_moderator;
+  /**
+   * @brief The project's name in its platform.
+   *
+   * @since 2.0.0
+   */
+  std::string name{};
 
-    /**
-     * @brief Whether this user is a Top.gg website administrator or not.
-     *
-     * @since 2.0.0
-     */
-    bool is_admin;
+  /**
+   * @brief The project's platform.
+   *
+   * @since 2.0.0
+   */
+  topgg::platform platform{};
 
-    friend class client;
-  };
-}; // namespace topgg
+  /**
+   * @brief The project's type.
+   *
+   * @since 2.0.0
+   */
+  project_type type{};
+
+  /**
+   * @brief The project's headline.
+   *
+   * @since 2.0.0
+   */
+  std::string headline{};
+
+  /**
+   * @brief The project's tags.
+   *
+   * @since 2.0.0
+   */
+  std::vector<std::string> tags{};
+
+  /**
+   * @brief The project's current vote count.
+   *
+   * @since 2.0.0
+   */
+  uint64_t current_votes{};
+
+  /**
+   * @brief The project's vote count.
+   *
+   * @since 2.0.0
+   */
+  uint64_t total_votes{};
+
+  /**
+   * @brief The project's review score.
+   *
+   * @since 2.0.0
+   */
+  float review_score{};
+
+  /**
+   * @brief The project's review count.
+   *
+   * @since 2.0.0
+   */
+  uint64_t review_count{};
+
+  friend class base_client;
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+  friend class oauth2_client;
+#endif
+  friend class paginated_result<project>;
+};
+
+/**
+ * @brief A supported locale.
+ *
+ * @since 2.0.0
+ */
+enum locale {
+  /**
+   * @brief English.
+   *
+   * @since 2.0.0
+   */
+  l_english,
+
+  /**
+   * @brief German.
+   *
+   * @since 2.0.0
+   */
+  l_german,
+
+  /**
+   * @brief French.
+   *
+   * @since 2.0.0
+   */
+  l_french,
+
+  /**
+   * @brief Portuguese.
+   *
+   * @since 2.0.0
+   */
+  l_portuguese,
+
+  /**
+   * @brief Turkish.
+   *
+   * @since 2.0.0
+   */
+  l_turkish,
+
+  /**
+   * @brief Hindi.
+   *
+   * @since 2.0.0
+   */
+  l_hindi,
+
+  /**
+   * @brief Japanese.
+   *
+   * @since 2.0.0
+   */
+  l_japanese,
+
+  /**
+   * @brief Arabic.
+   *
+   * @since 2.0.0
+   */
+  l_arabic,
+
+  /**
+   * @brief Dutch.
+   *
+   * @since 2.0.0
+   */
+  l_dutch,
+
+  /**
+   * @brief Korean.
+   *
+   * @since 2.0.0
+   */
+  l_korean,
+
+  /**
+   * @brief Italian.
+   *
+   * @since 2.0.0
+   */
+  l_italian,
+
+  /**
+   * @brief Spanish.
+   *
+   * @since 2.0.0
+   */
+  l_spanish,
+
+  /**
+   * @brief Russian.
+   *
+   * @since 2.0.0
+   */
+  l_russian,
+
+  /**
+   * @brief Ukrainian.
+   *
+   * @since 2.0.0
+   */
+  l_ukrainian,
+
+  /**
+   * @brief Vietnamese.
+   *
+   * @since 2.0.0
+   */
+  l_vietnamese,
+
+  /**
+   * @brief Chinese Simplified.
+   *
+   * @since 2.0.0
+   */
+  l_chinese_simplified,
+};
+
+/**
+ * @brief A locale-text map.
+ *
+ * @since 2.0.0
+ */
+class locale_map {
+  nlohmann::json m_json{};
+
+  void enforce_constraints(const uint16_t minimum,
+                           const uint16_t maximum) const;
+
+ public:
+  /**
+   * @brief Inserts a new locale-text entry.
+   *
+   * @param locale_ The locale.
+   * @param text The text.
+   * @since 2.0.0
+   */
+  void set(const locale& locale_, const std::string& text);
+
+  friend class base_client;
+#ifndef TOPGG_OAUTH2_ACCESS_TOKENS_ONLY
+  friend class client;
+#endif
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+  friend class oauth2_client;
+#endif
+};
+
+/**
+ * @brief An announcement category.
+ *
+ * @since 2.0.0
+ */
+enum announcement_category {
+  /**
+   * @brief A generic announcement.
+   *
+   * @since 2.0.0
+   */
+  ac_announcement,
+
+  /**
+   * @brief An event.
+   *
+   * @since 2.0.0
+   */
+  ac_event,
+
+  /**
+   * @brief A new feature.
+   *
+   * @since 2.0.0
+   */
+  ac_new_feature,
+};
+
+/**
+ * @brief A project's metrics.
+ *
+ * @since 2.0.0
+ */
+class metrics {
+  virtual nlohmann::json to_json() const = 0;
+
+  friend class base_client;
+#ifndef TOPGG_OAUTH2_ACCESS_TOKENS_ONLY
+  friend class client;
+#endif
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+  friend class oauth2_client;
+#endif
+};
+
+template <class T>
+class timestamped_metrics;
+
+/**
+ * @brief A Discord bot's metrics.
+ *
+ * @since 2.0.0
+ */
+class discord_bot_metrics : public metrics {
+  std::optional<uint64_t> m_server_count{};
+  std::optional<uint64_t> m_shard_count{};
+
+  inline constexpr discord_bot_metrics(
+      const std::pair<std::optional<uint64_t>, std::optional<uint64_t>>& pair)
+      : m_server_count(pair.first), m_shard_count(pair.second) {}
+
+  nlohmann::json to_json() const override;
+
+ public:
+  discord_bot_metrics() = delete;
+
+  /**
+   * @brief Creates a Discord bot's metrics instance.
+   *
+   * @param server_count_ The bot's current server count.
+   * @param shard_count_ The bot's current shard count.
+   * @since 2.0.0
+   */
+  inline constexpr discord_bot_metrics(const uint64_t server_count_,
+                                       const uint64_t shard_count_)
+      : m_server_count(server_count_), m_shard_count(shard_count_) {}
+
+  /**
+   * @brief Creates a Discord bot's metrics instance.
+   *
+   * @param server_count_ The bot's current server count.
+   * @return topgg::discord_bot_metrics The Discord bot's metrics.
+   * @since 2.0.0
+   */
+  static inline constexpr discord_bot_metrics server_count(
+      const uint64_t server_count_) noexcept {
+    return {std::make_pair(server_count_, std::nullopt)};
+  }
+
+  /**
+   * @brief Creates a Discord bot's metrics instance.
+   *
+   * @param shard_count_ The bot's current shard count.
+   * @return topgg::discord_bot_metrics The Discord bot's metrics.
+   * @since 2.0.0
+   */
+  static inline constexpr discord_bot_metrics shard_count(
+      const uint64_t shard_count_) noexcept {
+    return {std::make_pair(std::nullopt, shard_count_)};
+  }
+
+  friend class timestamped_metrics<discord_bot_metrics>;
+};
+
+/**
+ * @brief A Discord server's metrics.
+ *
+ * @since 2.0.0
+ */
+class discord_server_metrics : public metrics {
+  std::optional<uint64_t> m_total_member_count{};
+  std::optional<uint64_t> m_online_member_count{};
+
+  inline constexpr discord_server_metrics(
+      const std::pair<std::optional<uint64_t>, std::optional<uint64_t>>& pair)
+      : m_total_member_count(pair.first), m_online_member_count(pair.second) {}
+
+  nlohmann::json to_json() const override;
+
+ public:
+  discord_server_metrics() = delete;
+
+  /**
+   * @brief Creates a Discord server's metrics instance.
+   *
+   * @param total_member_count_ The server's current member count.
+   * @param online_member_count_ The server's current online member count.
+   * @since 2.0.0
+   */
+  inline constexpr discord_server_metrics(const uint64_t total_member_count_,
+                                          const uint64_t online_member_count_)
+      : m_total_member_count(total_member_count_),
+        m_online_member_count(online_member_count_) {}
+
+  /**
+   * @brief Creates a Discord server's metrics instance.
+   *
+   * @param total_member_count_ The server's current member count.
+   * @return topgg::discord_server_metrics The Discord server's metrics.
+   * @since 2.0.0
+   */
+  static inline constexpr discord_server_metrics total_member_count(
+      const uint64_t total_member_count_) noexcept {
+    return {std::make_pair(total_member_count_, std::nullopt)};
+  }
+
+  /**
+   * @brief Creates a Discord server's metrics instance.
+   *
+   * @param online_member_count_ The server's current online member count.
+   * @return topgg::discord_server_metrics The Discord server's metrics.
+   * @since 2.0.0
+   */
+  static inline constexpr discord_server_metrics online_member_count(
+      const uint64_t online_member_count_) noexcept {
+    return {std::make_pair(std::nullopt, online_member_count_)};
+  }
+
+  friend class timestamped_metrics<discord_server_metrics>;
+};
+
+/**
+ * @brief A Roblox game's metrics.
+ *
+ * @since 2.0.0
+ */
+class roblox_metrics : public metrics {
+  uint64_t m_player_count{};
+
+  nlohmann::json to_json() const override;
+
+ public:
+  roblox_metrics() = delete;
+
+  /**
+   * @brief Creates a Roblox game's metrics instance.
+   *
+   * @param player_count The game's current player count.
+   * @since 2.0.0
+   */
+  inline constexpr roblox_metrics(const uint64_t player_count)
+      : m_player_count(player_count) {}
+
+  friend class timestamped_metrics<roblox_metrics>;
+};
+
+std::string _to_time_string(const time_t timestamp);
+
+/**
+ * @brief A project's timestamped metrics.
+ *
+ * @since 2.0.0
+ */
+template <class T>
+class timestamped_metrics {
+  static_assert(
+      std::is_base_of_v<metrics, T>,
+      "timestamped_metrics class template must be a child of metrics");
+
+  nlohmann::json m_json{};
+
+ public:
+  inline timestamped_metrics() : m_json(nlohmann::json::array()) {}
+
+  /**
+   * @brief Inserts a new timestamped metrics entry.
+   *
+   * @param timestamp The timestamp.
+   * @param metrics_ The project's metrics.
+   * @since 2.0.0
+   */
+  void add(const time_t timestamp, const T& metrics_) {
+    nlohmann::json json{};
+
+    json["timestamp"] = _to_time_string(timestamp);
+    json["metrics"] = metrics_.to_json();
+
+    m_json.push_back(json);
+  }
+
+  /**
+   * @brief Inserts a new timestamped metrics entry using the current timestamp.
+   *
+   * @param metrics_ The project's metrics.
+   * @since 2.0.0
+   */
+  inline void add(const T& metrics_) { add(time(nullptr), metrics_); }
+
+  /**
+   * @brief Clears the contents.
+   *
+   * @since 2.0.0
+   */
+  inline void clear() { m_json.clear(); }
+
+  friend class base_client;
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+  friend class oauth2_client;
+#endif
+};
+
+/**
+ * @brief A partial vote.
+ *
+ * @since 2.0.0
+ */
+class partial_vote {
+ protected:
+  partial_vote(const nlohmann::json& j);
+
+ public:
+  partial_vote() = delete;
+
+  /**
+   * @brief The vote's weight (1 normally, 2 during weekend multiplier.)
+   *
+   * @since 2.0.0
+   */
+  uint16_t weight{};
+
+  /**
+   * @brief When the vote was cast.
+   *
+   * @since 2.0.0
+   */
+  time_t created_at{};
+
+  /**
+   * @brief When the user can vote again.
+   *
+   * @since 2.0.0
+   */
+  time_t expires_at{};
+
+  /**
+   * @brief Whether the vote has expired.
+   *
+   * @return bool Whether the vote has expired.
+   * @since 2.0.0
+   */
+  inline bool has_expired() const noexcept {
+    return time(nullptr) >= expires_at;
+  }
+
+  friend class base_client;
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+  friend class oauth2_client;
+#endif
+};
+
+/**
+ * @brief A user's source platform.
+ *
+ * @since 2.0.0
+ */
+enum user_source {
+  /**
+   * @brief The user came from Top.gg.
+   *
+   * @since 2.0.0
+   */
+  us_topgg,
+
+  /**
+   * @brief The user came from Discord.
+   *
+   * @since 2.0.0
+   */
+  us_discord,
+};
+
+/**
+ * @brief A vote.
+ *
+ * @since 2.0.0
+ */
+class vote : public partial_vote {
+  vote(const nlohmann::json& j);
+
+ public:
+  vote() = delete;
+
+  /**
+   * @brief The voter's Top.gg ID.
+   *
+   * @since 2.0.0
+   */
+  std::string user_id{};
+
+  /**
+   * @brief The voter's platform ID.
+   *
+   * @since 2.0.0
+   */
+  std::string platform_id{};
+
+  friend class base_client;
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+  friend class oauth2_client;
+#endif
+  friend class paginated_result<vote>;
+};
+
+/**
+ * @brief An integration.
+ *
+ * @since 2.0.0
+ */
+class integration {
+  integration(const nlohmann::json& j);
+
+ public:
+  integration() = delete;
+
+  /**
+   * @brief The integration's Top.gg ID.
+   *
+   * @since 2.0.0
+   */
+  std::string id{};
+
+  /**
+   * @brief The integration's name.
+   *
+   * @since 2.0.0
+   */
+  std::string name{};
+
+  /**
+   * @brief The integration's description.
+   *
+   * @since 2.0.0
+   */
+  std::string description{};
+
+  /**
+   * @brief The integration's icon URL.
+   *
+   * @since 2.0.0
+   */
+  std::string icon_url{};
+
+  /**
+   * @brief Whether the integration is connected to the project.
+   *
+   * @since 2.0.0
+   */
+  bool connected{};
+
+  friend class base_client;
+};
+
+/**
+ * @brief A base webhook.
+ *
+ * @since 2.0.0
+ */
+struct base_webhook {
+  /**
+   * @brief The webhook's label.
+   *
+   * @since 2.0.0
+   */
+  std::string label{};
+
+  /**
+   * @brief The webhook's URL.
+   *
+   * @since 2.0.0
+   */
+  std::string url{};
+
+  base_webhook() = default;
+
+ protected:
+  base_webhook(const nlohmann::json& j);
+
+  friend class base_client;
+};
+
+/**
+ * @brief A webhook.
+ *
+ * @since 2.0.0
+ */
+class webhook : public base_webhook {
+  webhook(const nlohmann::json& j);
+
+ public:
+  webhook() = delete;
+
+  /**
+   * @brief The webhook's Top.gg ID.
+   *
+   * @since 2.0.0
+   */
+  std::string id{};
+
+  friend class base_client;
+};
+
+#ifndef TOPGG_PROJECT_TOKENS_ONLY
+/**
+ * @brief A user's platform connection.
+ *
+ * @since 2.0.0
+ */
+struct user_connection {
+  /**
+   * @brief The connection's platform.
+   *
+   * @since 2.0.0
+   */
+  topgg::platform platform{};
+
+  /**
+   * @brief The user's platform ID.
+   *
+   * @since 2.0.0
+   */
+  std::string id{};
+};
+
+/**
+ * @brief A user.
+ *
+ * @since 2.0.0
+ */
+class user {
+  user(const nlohmann::json& j);
+
+ public:
+  user() = delete;
+
+  /**
+   * @brief The user's Top.gg ID.
+   *
+   * @since 2.0.0
+   */
+  std::string id{};
+
+  /**
+   * @brief The user's username.
+   *
+   * @since 2.0.0
+   */
+  std::string username{};
+
+  /**
+   * @brief The user's avatar URL.
+   *
+   * @since 2.0.0
+   */
+  std::optional<std::string> avatar{std::nullopt};
+
+  /**
+   * @brief The user's platform connections.
+   *
+   * @since 2.0.0
+   */
+  std::vector<user_connection> connections{};
+
+  friend class base_client;
+  friend class oauth2_client;
+};
+
+/**
+ * @brief A project's review status.
+ *
+ * @since 2.0.0
+ */
+enum review_status {
+  /**
+   * @brief The project is currently a draft.
+   *
+   * @since 2.0.0
+   */
+  rs_draft,
+
+  /**
+   * @brief The project is currently in the reviewer queue.
+   *
+   * @since 2.0.0
+   */
+  rs_in_review,
+
+  /**
+   * @brief The project is approved and listed.
+   *
+   * @since 2.0.0
+   */
+  rs_approved,
+};
+
+/**
+ * @brief A user's project.
+ *
+ * @since 2.0.0
+ */
+class user_project : public partial_project {
+  user_project(const nlohmann::json& j);
+
+ public:
+  user_project() = delete;
+
+  /**
+   * @brief The project's headline.
+   *
+   * @since 2.0.0
+   */
+  std::string headline{};
+
+  /**
+   * @brief The project's review status.
+   *
+   * @since 2.0.0
+   */
+  topgg::review_status review_status{};
+
+  friend class base_client;
+  friend class oauth2_client;
+};
+
+/**
+ * @brief A project submission.
+ *
+ * @since 2.0.0
+ */
+struct project_submission {
+  project_submission() = delete;
+
+  inline project_submission(const platform platform_, const project_type type_,
+                            const std::string& platform_id_,
+                            const std::string& headline_,
+                            const std::string& page_content_)
+      : platform(platform_),
+        type(type_),
+        platform_id(platform_id_),
+        headline(headline_),
+        page_content(page_content_) {}
+
+  /**
+   * @brief The project's platform.
+   *
+   * @since 2.0.0
+   */
+  topgg::platform platform{};
+
+  /**
+   * @brief The project's type.
+   *
+   * @since 2.0.0
+   */
+  project_type type{};
+
+  /**
+   * @brief The project's platform ID.
+   *
+   * @since 2.0.0
+   */
+  std::string platform_id{};
+
+  /**
+   * @brief The project's headline.
+   *
+   * @since 2.0.0
+   */
+  std::string headline{};
+
+  /**
+   * @brief The project's page content.
+   *
+   * @since 2.0.0
+   */
+  std::string page_content{};
+};
+#endif
+};  // namespace topgg

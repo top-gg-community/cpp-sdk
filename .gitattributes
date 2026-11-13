@@ -1,13 +1,1 @@
-.clang-format eol=lf
-.gitignore eol=lf
-.gitmodules eol=lf
-.gitattributes eol=lf
-README.md eol=lf
-CMakeLists.txt eol=lf
-docs/Doxyfile eol=lf
-docs/*.png binary
-docs/*.css eol=lf linguist-vendored=true
-docs/*.html eol=lf linguist-vendored=true
-**/*.cmake eol=lf
-**/*.cpp eol=lf
-**/*.h eol=lf
+docs/icon.png binary

@@ -1,53 +1,17 @@
-/**
- * @module topgg
- * @file topgg.h
- * @brief The official C++ wrapper for the Top.gg API.
- * @authors Top.gg, null8626
- * @copyright Copyright (c) 2024 Top.gg & null8626
- * @date 2024-09-22
- * @version 2.0.0
- */
-
 #pragma once
 
-#ifdef _WIN32
-#if defined(DPP_STATIC) && !defined(TOPGG_STATIC)
-#define TOPGG_STATIC
-#elif defined(TOPGG_STATIC) && !defined(DPP_STATIC)
-#define DPP_STATIC
-#endif
+#if defined(_WIN32) && !defined(_WINSOCKAPI_)
+#define _WINSOCKAPI_
 #endif
 
-#if defined(_WIN32) && !defined(TOPGG_STATIC)
-#ifdef __TOPGG_BUILDING_DLL__
-#include <dpp/win32_safe_warnings.h>
-#define TOPGG_EXPORT __declspec(dllexport)
-#else
-#define TOPGG_EXPORT __declspec(dllimport)
-#endif
-#else
-#define TOPGG_EXPORT
-#endif
-
-#if defined(__GNUC__) || defined(__clang__)
-#define TOPGG_UNUSED __attribute__((unused))
-#else
-#define TOPGG_UNUSED
-#endif
-
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-warning-option"
-#pragma clang diagnostic ignored "-Wdeprecated-literal-operator"
-#pragma clang diagnostic ignored "-Wdeprecated-copy-with-dtor"
-#endif
-
-#include <dpp/dpp.h>
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-
-#include <topgg/result.h>
+#include <topgg/debug.h>
 #include <topgg/models.h>
+#include <topgg/util.h>
+#ifdef TOPGG_WEBHOOKS
+#include <topgg/webhooks/client.h>
+#include <topgg/webhooks/models.h>
+#endif
 #include <topgg/client.h>
+#include <topgg/exception.h>
+#include <topgg/http.h>
+#include <topgg/result.h>
