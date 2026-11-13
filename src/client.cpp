@@ -82,7 +82,7 @@ void topgg::base_client::post_announcement(
     const topgg::empty_callback& callback, const bool defer) {
   if (title.length() < 3 || title.length() > 100) {
     throw topgg::exception{"Title length is outside of the accepted threshold"};
-  } else if (content.length() < 10 || content.length() > 2000) {
+  } else if (content.length() < 100 || content.length() > 2000) {
     throw topgg::exception{
         "Content length is outside of the accepted threshold"};
   }
