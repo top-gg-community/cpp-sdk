@@ -536,10 +536,7 @@ std::shared_ptr<topgg::oauth2_client> topgg::oauth2::new_client(
   return client;
 }
 
-std::shared_ptr<topgg::oauth2_url> topgg::oauth2::new_url() {
-  const auto state{topgg::_random_string()};
-  auto code_verifier{topgg::_random_string()};
-
+std::shared_ptr<topgg::oauth2_url> topgg::oauth2::new_url(const std::string& state, const std::string& code_verifier) {
   std::lock_guard guard_{m_url_mutex};
 
   if (EVP_DigestUpdate(m_md_context, code_verifier.data(),
@@ -589,6 +586,13 @@ std::shared_ptr<topgg::oauth2_url> topgg::oauth2::new_url() {
 
   return std::shared_ptr<topgg::oauth2_url>{
       new topgg::oauth2_url{this, code_verifier, url}};
+}
+
+std::shared_ptr<topgg::oauth2_url> topgg::oauth2::new_url() {
+  const auto state{topgg::_random_string()};
+  auto code_verifier{topgg::_random_string()};
+
+  return new_url(state, code_verifier);
 }
 
 topgg::oauth2::~oauth2() {

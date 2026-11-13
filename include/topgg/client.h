@@ -753,6 +753,17 @@ class oauth2 {
   std::shared_ptr<oauth2_client> new_client(const oauth2_session& session);
 
   /**
+   * @brief Creates an oauth2 URL from an existing state and code verifier.
+   *
+   * @param state The existing state.
+   * @param code_verifier The existing code verifier.
+   * @return std::shared_ptr<topgg::oauth2_url> The oauth2 URL.
+   * @throws topgg::exception Code verifier computation failure.
+   * @since 2.0.0
+   */
+  std::shared_ptr<oauth2_url> new_url(const std::string& state, const std::string& code_verifier);
+
+  /**
    * @brief Creates an oauth2 URL.
    *
    * @return std::shared_ptr<topgg::oauth2_url> The oauth2 URL.
