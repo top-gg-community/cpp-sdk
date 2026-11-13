@@ -449,7 +449,7 @@ void topgg::oauth2_url::exchange(
   body += m_oauth2->m_client_id +
           "&client_secret=" + m_oauth2->m_client_secret + "&code=" + code +
           "&redirect_uri=" + topgg::_url_encode(m_oauth2->m_redirect_uri) +
-          "&code_verifier=" + m_code_verifier;
+          "&code_verifier=" + code_verifier;
 
   m_oauth2->m_http.fetch(new topgg::http_request{
       "", "POST", "/oauth2/token",
@@ -585,7 +585,7 @@ std::shared_ptr<topgg::oauth2_url> topgg::oauth2::new_url(const std::string& sta
   url += scopes;
 
   return std::shared_ptr<topgg::oauth2_url>{
-      new topgg::oauth2_url{this, code_verifier, url}};
+      new topgg::oauth2_url{this, state, code_verifier, url}};
 }
 
 std::shared_ptr<topgg::oauth2_url> topgg::oauth2::new_url() {

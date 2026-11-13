@@ -678,14 +678,28 @@ class oauth2;
  */
 class oauth2_url {
   oauth2* m_oauth2{nullptr};
-  std::string m_code_verifier{};
 
-  inline oauth2_url(oauth2* oauth2_, const std::string& code_verifier,
+  inline oauth2_url(oauth2* oauth2_, const std::string& state_,
+                    const std::string& code_verifier_,
                     const std::string& url_)
-      : m_oauth2(oauth2_), m_code_verifier(code_verifier), url(url_) {}
+      : m_oauth2(oauth2_), state(state_), code_verifier(code_verifier_), url(url_) {}
 
  public:
   oauth2_url() = delete;
+
+  /**
+   * @brief The state.
+   *
+   * @since 2.0.0
+   */
+  std::string state{};
+
+  /**
+   * @brief The code verifier.
+   *
+   * @since 2.0.0
+   */
+  std::string code_verifier{};
 
   /**
    * @brief The URL.
