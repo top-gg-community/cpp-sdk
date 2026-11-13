@@ -153,8 +153,8 @@ int main() {
 
     topgg::locale_map page_content{};
 
-    headline.set(topgg::locale::l_english, "hello this is a page content");
-    headline.set(topgg::locale::l_german, "hallo dies ist ein seiteninhalt");
+    page_content.set(topgg::locale::l_english, "hello this is a page content");
+    page_content.set(topgg::locale::l_german, "hallo dies ist ein seiteninhalt");
 
     dbl.edit_project(headline, page_content, [](const topgg::empty_result& result) {
       try {
