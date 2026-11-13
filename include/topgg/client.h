@@ -854,7 +854,7 @@ class oauth2_client : public base_client,
    * @param defer Whether to defer the request later. Defaults to false.
    * @since 2.0.0
    */
-  void get_authorized_user_project(
+  void get_authorized_user_projects(
       const callback<std::vector<user_project>>& callback,
       const bool defer = false);
 

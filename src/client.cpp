@@ -338,7 +338,7 @@ void topgg::oauth2_client::get_authorized_user(
   fetch_simple("GET", "/users/@me", callback, defer);
 }
 
-void topgg::oauth2_client::get_authorized_user_project(
+void topgg::oauth2_client::get_authorized_user_projects(
     const topgg::callback<std::vector<topgg::user_project>>& callback,
     const bool defer) {
   fetch_vector("GET", "/users/@me/projects", callback, defer);

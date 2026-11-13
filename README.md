@@ -316,7 +316,7 @@ int main() {
               }
             });
 
-            dbl->get_authorized_user_project([](const topgg::result<std::vector<topgg::user_project>>& result) {
+            dbl->get_authorized_user_projects([](const topgg::result<std::vector<topgg::user_project>>& result) {
               try {
                 const auto& projects{result.get()};
 
@@ -330,7 +330,7 @@ int main() {
                   std::cout << "review_status: " << project.review_status << std::endl;
                 }
               } catch (const std::exception& error) {
-                std::cerr << "get_authorized_user_project error: " << error.what() << std::endl;
+                std::cerr << "get_authorized_user_projects error: " << error.what() << std::endl;
               }
             });
           } catch (const std::exception& error) {
